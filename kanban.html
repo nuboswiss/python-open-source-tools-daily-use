@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban Board</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding: 0 8px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-ghost {
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.9);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+        }
+
+        .btn-icon {
+            font-size: 14px;
+        }
+
+        /* Board */
+        .board {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding-bottom: 24px;
+            align-items: flex-start;
+        }
+
+        .board::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .board::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+        }
+
+        .board::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+        }
+
+        .board::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Columns */
+        .column {
+            background: rgba(255,255,255,0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            min-width: 320px;
+            max-width: 320px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 140px);
+        }
+
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+            margin-bottom: 16px;
+        }
+
+        .column-header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .column-move-btns {
+            display: flex;
+            gap: 2px;
+        }
+
+        .column-move-btn {
+            background: rgba(255,255,255,0.06);
+            border: none;
+            cursor: pointer;
+            padding: 6px 8px;
+            border-radius: 6px;
+            color: rgba(255,255,255,0.4);
+            font-size: 10px;
+            transition: all 0.15s ease;
+        }
+
+        .column-move-btn:hover:not(:disabled) {
+            background: rgba(255,255,255,0.12);
+            color: rgba(255,255,255,0.8);
+        }
+
+        .column-move-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .column-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 8px;
+            transition: all 0.15s ease;
+        }
+
+        .column-title:hover {
+            background: rgba(255,255,255,0.08);
+        }
+
+        .column-title-input {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            padding: 6px 10px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            outline: none;
+            width: 100%;
+            background: rgba(255,255,255,0.1);
+            font-family: inherit;
+        }
+
+        .column-card-count {
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.5);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 20px;
+        }
+
+        .column-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            color: rgba(255,255,255,0.4);
+            font-size: 14px;
+            transition: all 0.15s ease;
+        }
+
+        .icon-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.8);
+        }
+
+        .icon-btn.delete:hover {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+        }
+
+        /* Cards Container */
+        .cards-container {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 60px;
+            padding: 4px;
+            margin: -4px;
+        }
+
+        .cards-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .cards-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .cards-container::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.15);
+            border-radius: 3px;
+        }
+
+        /* Cards */
+        .card {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .card:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .card-labels {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .label {
+            width: 32px;
+            height: 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .label:hover {
+            transform: scaleY(1.5);
+        }
+
+        .label-red { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .label-orange { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .label-green { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .label-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .label-purple { background: linear-gradient(135deg, #a855f7, #9333ea); }
+
+        .card-content {
+            font-size: 14px;
+            color: rgba(255,255,255,0.85);
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .card-content-input {
+            width: 100%;
+            border: none;
+            font-size: 14px;
+            color: #fff;
+            background: transparent;
+            resize: none;
+            outline: none;
+            font-family: inherit;
+            line-height: 1.5;
+            min-height: 60px;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 4px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+
+        .card:hover .card-footer {
+            opacity: 1;
+        }
+
+        /* Add Card */
+        .add-card-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            background: rgba(255,255,255,0.04);
+            border: 1px dashed rgba(255,255,255,0.15);
+            border-radius: 12px;
+            cursor: pointer;
+            color: rgba(255,255,255,0.5);
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            width: 100%;
+            text-align: center;
+            transition: all 0.15s ease;
+            margin-top: 12px;
+        }
+
+        .add-card-btn:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.25);
+            color: rgba(255,255,255,0.8);
+        }
+
+        .add-card-form {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 14px;
+            margin-top: 12px;
+        }
+
+        .add-card-input {
+            width: 100%;
+            border: none;
+            font-size: 14px;
+            color: #fff;
+            background: transparent;
+            resize: none;
+            outline: none;
+            font-family: inherit;
+            line-height: 1.5;
+            min-height: 80px;
+            margin-bottom: 12px;
+        }
+
+        .add-card-input::placeholder {
+            color: rgba(255,255,255,0.3);
+        }
+
+        .add-card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .add-card-actions .btn {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.7);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.12);
+        }
+
+        /* Drop zone indicator */
+        .drop-zone {
+            border-radius: 12px;
+            transition: all 0.15s ease;
+        }
+
+        .drop-zone.active {
+            background: rgba(102, 126, 234, 0.15);
+            border: 2px dashed rgba(102, 126, 234, 0.5);
+            min-height: 80px;
+        }
+
+        /* Label Picker */
+        .label-picker {
+            position: fixed;
+            background: #1e1e2e;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            padding: 12px;
+            z-index: 1000;
+            min-width: 180px;
+        }
+
+        .label-picker-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .label-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 10px 12px;
+            margin-bottom: 4px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            transition: all 0.15s ease;
+        }
+
+        .label-option:last-child {
+            margin-bottom: 0;
+        }
+
+        .label-option-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 4px;
+        }
+
+        .label-option.label-red { background: rgba(239, 68, 68, 0.1); color: #f87171; }
+        .label-option.label-red .label-option-dot { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .label-option.label-red:hover { background: rgba(239, 68, 68, 0.2); }
+
+        .label-option.label-orange { background: rgba(249, 115, 22, 0.1); color: #fb923c; }
+        .label-option.label-orange .label-option-dot { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .label-option.label-orange:hover { background: rgba(249, 115, 22, 0.2); }
+
+        .label-option.label-green { background: rgba(34, 197, 94, 0.1); color: #4ade80; }
+        .label-option.label-green .label-option-dot { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .label-option.label-green:hover { background: rgba(34, 197, 94, 0.2); }
+
+        .label-option.label-blue { background: rgba(59, 130, 246, 0.1); color: #60a5fa; }
+        .label-option.label-blue .label-option-dot { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .label-option.label-blue:hover { background: rgba(59, 130, 246, 0.2); }
+
+        .label-option.label-purple { background: rgba(168, 85, 247, 0.1); color: #c084fc; }
+        .label-option.label-purple .label-option-dot { background: linear-gradient(135deg, #a855f7, #9333ea); }
+        .label-option.label-purple:hover { background: rgba(168, 85, 247, 0.2); }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #1e1e2e;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 28px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: inherit;
+            margin-bottom: 20px;
+            outline: none;
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            transition: all 0.15s ease;
+        }
+
+        .modal input::placeholder {
+            color: rgba(255,255,255,0.3);
+        }
+
+        .modal input:focus {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255,255,255,0.3);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+
+            .header-actions {
+                flex-wrap: wrap;
+            }
+
+            .column {
+                min-width: 280px;
+                max-width: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <div class="logo-icon">📋</div>
+            <h1>Kanban Board</h1>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-primary" onclick="showAddColumnModal()">
+                <span class="btn-icon">+</span> Add Column
+            </button>
+            <button class="btn btn-ghost" onclick="exportBoard()">
+                <span class="btn-icon">↓</span> Export
+            </button>
+            <label class="btn btn-ghost">
+                <span class="btn-icon">↑</span> Import
+                <input type="file" id="importInput" accept=".txt,.json" onchange="importBoard(event)" style="display: none;">
+            </label>
+            <button class="btn btn-danger" onclick="clearBoard()">
+                <span class="btn-icon">×</span> Clear
+            </button>
+        </div>
+    </div>
+
+    <div class="board" id="board"></div>
+
+    <!-- Add Column Modal -->
+    <div class="modal-overlay" id="addColumnModal" onclick="handleModalOverlayClick(event)">
+        <div class="modal">
+            <h2>Create New Column</h2>
+            <input type="text" id="columnNameInput" placeholder="Enter column name..." onkeypress="handleColumnInputKeypress(event)">
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="hideAddColumnModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="addColumn()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Clear Modal -->
+    <div class="modal-overlay" id="clearConfirmModal" onclick="handleClearModalClick(event)">
+        <div class="modal">
+            <h2>Clear Board?</h2>
+            <p style="color: rgba(255,255,255,0.6); margin-bottom: 20px; font-size: 14px;">This will delete all columns and cards. This action cannot be undone.</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="hideClearConfirmModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmClearBoard()">Yes, Clear All</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Default board data
+        const defaultData = {
+            columns: [
+                { id: 'col-1', title: 'To Do', cards: [
+                    { id: 'card-1', content: 'Research project requirements and gather specifications', labels: ['blue'] },
+                    { id: 'card-2', content: 'Create wireframes for the new dashboard', labels: ['purple'] }
+                ]},
+                { id: 'col-2', title: 'In Progress', cards: [
+                    { id: 'card-3', content: 'Build responsive landing page with animations', labels: ['green', 'blue'] }
+                ]},
+                { id: 'col-3', title: 'Review', cards: []},
+                { id: 'col-4', title: 'Done', cards: [
+                    { id: 'card-4', content: 'Setup development environment', labels: ['green'] }
+                ]}
+            ]
+        };
+
+        let boardData;
+        let draggedCard = null;
+        let draggedCardColumn = null;
+
+        // Initialize
+        function init() {
+            loadData();
+            renderBoard();
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('kanbanBoard');
+            boardData = saved ? JSON.parse(saved) : defaultData;
+        }
+
+        function saveData() {
+            localStorage.setItem('kanbanBoard', JSON.stringify(boardData));
+        }
+
+        function generateId() {
+            return 'id-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function renderBoard() {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+
+            if (boardData.columns.length === 0) {
+                board.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-text">No columns yet. Click "Add Column" to get started!</div>
+                    </div>
+                `;
+                return;
+            }
+
+            boardData.columns.forEach((column, index) => {
+                board.appendChild(createColumnElement(column, index));
+            });
+        }
+
+        function createColumnElement(column, index) {
+            const colEl = document.createElement('div');
+            colEl.className = 'column';
+            colEl.dataset.columnId = column.id;
+
+            const isFirst = index === 0;
+            const isLast = index === boardData.columns.length - 1;
+            const cardCount = column.cards.length;
+
+            colEl.innerHTML = `
+                <div class="column-header">
+                    <div class="column-header-left">
+                        <div class="column-move-btns">
+                            <button class="column-move-btn" onclick="moveColumn('${column.id}', -1)" ${isFirst ? 'disabled' : ''} title="Move left">◄</button>
+                            <button class="column-move-btn" onclick="moveColumn('${column.id}', 1)" ${isLast ? 'disabled' : ''} title="Move right">►</button>
+                        </div>
+                        <span class="column-title" onclick="editColumnTitle('${column.id}')">${escapeHtml(column.title)}</span>
+                        <span class="column-card-count">${cardCount}</span>
+                    </div>
+                    <div class="column-actions">
+                        <button class="icon-btn delete" onclick="deleteColumn('${column.id}')" title="Delete column">✕</button>
+                    </div>
+                </div>
+                <div class="cards-container" 
+                     ondragover="handleDragOver(event)" 
+                     ondrop="handleDrop(event, '${column.id}')"
+                     ondragleave="handleDragLeave(event)">
+                    ${column.cards.map(card => createCardHTML(card, column.id)).join('')}
+                </div>
+                <button class="add-card-btn" onclick="showAddCardForm('${column.id}')">
+                    <span>+</span> Add a card
+                </button>
+                <div class="add-card-form" id="add-form-${column.id}" style="display: none;">
+                    <textarea class="add-card-input" id="input-${column.id}" placeholder="What needs to be done?"></textarea>
+                    <div class="add-card-actions">
+                        <button class="btn btn-primary" onclick="addCard('${column.id}')">Add Card</button>
+                        <button class="btn btn-secondary" onclick="hideAddCardForm('${column.id}')">Cancel</button>
+                    </div>
+                </div>
+            `;
+
+            return colEl;
+        }
+
+        function createCardHTML(card, columnId) {
+            const labelsHtml = card.labels.map(label => 
+                `<span class="label label-${label}" onclick="removeLabel('${card.id}', '${columnId}', '${label}')"></span>`
+            ).join('');
+
+            return `
+                <div class="card" 
+                     draggable="true" 
+                     data-card-id="${card.id}"
+                     ondragstart="handleDragStart(event, '${card.id}', '${columnId}')"
+                     ondragend="handleDragEnd(event)">
+                    ${card.labels.length ? `<div class="card-labels">${labelsHtml}</div>` : ''}
+                    <div class="card-content" onclick="editCard('${card.id}', '${columnId}')">${escapeHtml(card.content)}</div>
+                    <div class="card-footer">
+                        <button class="icon-btn" onclick="showLabelPicker(event, '${card.id}', '${columnId}')" title="Add label">🏷</button>
+                        <button class="icon-btn delete" onclick="deleteCard('${card.id}', '${columnId}')" title="Delete">✕</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Modal helpers
+        function handleModalOverlayClick(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                hideAddColumnModal();
+            }
+        }
+
+        // Column operations
+        function showAddColumnModal() {
+            document.getElementById('addColumnModal').classList.add('active');
+            document.getElementById('columnNameInput').focus();
+        }
+
+        function hideAddColumnModal() {
+            document.getElementById('addColumnModal').classList.remove('active');
+            document.getElementById('columnNameInput').value = '';
+        }
+
+        function handleColumnInputKeypress(event) {
+            if (event.key === 'Enter') {
+                addColumn();
+            }
+        }
+
+        function addColumn() {
+            const input = document.getElementById('columnNameInput');
+            const title = input.value.trim();
+            if (!title) return;
+
+            boardData.columns.push({
+                id: generateId(),
+                title: title,
+                cards: []
+            });
+
+            saveData();
+            renderBoard();
+            hideAddColumnModal();
+        }
+
+        function editColumnTitle(columnId) {
+            const column = boardData.columns.find(c => c.id === columnId);
+            const colEl = document.querySelector(`[data-column-id="${columnId}"]`);
+            const titleEl = colEl.querySelector('.column-title');
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'column-title-input';
+            input.value = column.title;
+
+            const saveTitle = () => {
+                const newTitle = input.value.trim();
+                if (newTitle) {
+                    column.title = newTitle;
+                    saveData();
+                }
+                renderBoard();
+            };
+
+            input.onblur = saveTitle;
+            input.onkeypress = (e) => {
+                if (e.key === 'Enter') saveTitle();
+            };
+
+            titleEl.replaceWith(input);
+            input.focus();
+            input.select();
+        }
+
+        function deleteColumn(columnId) {
+            if (!confirm('Delete this column and all its cards?')) return;
+            boardData.columns = boardData.columns.filter(c => c.id !== columnId);
+            saveData();
+            renderBoard();
+        }
+
+        function moveColumn(columnId, direction) {
+            const currentIndex = boardData.columns.findIndex(c => c.id === columnId);
+            const newIndex = currentIndex + direction;
+            
+            if (newIndex < 0 || newIndex >= boardData.columns.length) return;
+            
+            const temp = boardData.columns[currentIndex];
+            boardData.columns[currentIndex] = boardData.columns[newIndex];
+            boardData.columns[newIndex] = temp;
+            
+            saveData();
+            renderBoard();
+        }
+
+        // Card operations
+        function showAddCardForm(columnId) {
+            document.getElementById(`add-form-${columnId}`).style.display = 'block';
+            document.querySelector(`[data-column-id="${columnId}"] .add-card-btn`).style.display = 'none';
+            document.getElementById(`input-${columnId}`).focus();
+        }
+
+        function hideAddCardForm(columnId) {
+            document.getElementById(`add-form-${columnId}`).style.display = 'none';
+            document.querySelector(`[data-column-id="${columnId}"] .add-card-btn`).style.display = 'flex';
+            document.getElementById(`input-${columnId}`).value = '';
+        }
+
+        function addCard(columnId) {
+            const input = document.getElementById(`input-${columnId}`);
+            const content = input.value.trim();
+            if (!content) return;
+
+            const column = boardData.columns.find(c => c.id === columnId);
+            column.cards.push({
+                id: generateId(),
+                content: content,
+                labels: []
+            });
+
+            saveData();
+            renderBoard();
+        }
+
+        function editCard(cardId, columnId) {
+            const column = boardData.columns.find(c => c.id === columnId);
+            const card = column.cards.find(c => c.id === cardId);
+            const cardEl = document.querySelector(`[data-card-id="${cardId}"]`);
+            const contentEl = cardEl.querySelector('.card-content');
+
+            const textarea = document.createElement('textarea');
+            textarea.className = 'card-content-input';
+            textarea.value = card.content;
+
+            const saveContent = () => {
+                const newContent = textarea.value.trim();
+                if (newContent) {
+                    card.content = newContent;
+                    saveData();
+                }
+                renderBoard();
+            };
+
+            textarea.onblur = saveContent;
+            textarea.onkeydown = (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    saveContent();
+                }
+            };
+
+            contentEl.replaceWith(textarea);
+            textarea.focus();
+            textarea.select();
+        }
+
+        function deleteCard(cardId, columnId) {
+            const column = boardData.columns.find(c => c.id === columnId);
+            column.cards = column.cards.filter(c => c.id !== cardId);
+            saveData();
+            renderBoard();
+        }
+
+        // Labels
+        let currentLabelPicker = null;
+
+        function showLabelPicker(event, cardId, columnId) {
+            event.stopPropagation();
+            closeLabelPicker();
+
+            const button = event.currentTarget;
+            const rect = button.getBoundingClientRect();
+            
+            const picker = document.createElement('div');
+            picker.className = 'label-picker';
+            picker.innerHTML = `
+                <div class="label-picker-title">Add Label</div>
+                <button class="label-option label-red" onclick="addLabel('${cardId}', '${columnId}', 'red')">
+                    <span class="label-option-dot"></span> Red
+                </button>
+                <button class="label-option label-orange" onclick="addLabel('${cardId}', '${columnId}', 'orange')">
+                    <span class="label-option-dot"></span> Orange
+                </button>
+                <button class="label-option label-green" onclick="addLabel('${cardId}', '${columnId}', 'green')">
+                    <span class="label-option-dot"></span> Green
+                </button>
+                <button class="label-option label-blue" onclick="addLabel('${cardId}', '${columnId}', 'blue')">
+                    <span class="label-option-dot"></span> Blue
+                </button>
+                <button class="label-option label-purple" onclick="addLabel('${cardId}', '${columnId}', 'purple')">
+                    <span class="label-option-dot"></span> Purple
+                </button>
+            `;
+
+            document.body.appendChild(picker);
+            
+            // Position the picker above the button
+            const pickerHeight = picker.offsetHeight;
+            let top = rect.top - pickerHeight - 8;
+            let left = rect.left - picker.offsetWidth + rect.width;
+            
+            // If it would go off the top, show below instead
+            if (top < 10) {
+                top = rect.bottom + 8;
+            }
+            
+            // Keep it on screen horizontally
+            if (left < 10) {
+                left = 10;
+            }
+            
+            picker.style.top = top + 'px';
+            picker.style.left = left + 'px';
+            
+            currentLabelPicker = picker;
+
+            setTimeout(() => {
+                document.addEventListener('click', closeLabelPicker);
+            }, 0);
+        }
+
+        function closeLabelPicker() {
+            if (currentLabelPicker) {
+                currentLabelPicker.remove();
+                currentLabelPicker = null;
+                document.removeEventListener('click', closeLabelPicker);
+            }
+        }
+
+        function addLabel(cardId, columnId, label) {
+            const column = boardData.columns.find(c => c.id === columnId);
+            const card = column.cards.find(c => c.id === cardId);
+            if (!card.labels.includes(label)) {
+                card.labels.push(label);
+                saveData();
+                renderBoard();
+            }
+            closeLabelPicker();
+        }
+
+        function removeLabel(cardId, columnId, label) {
+            event.stopPropagation();
+            const column = boardData.columns.find(c => c.id === columnId);
+            const card = column.cards.find(c => c.id === cardId);
+            card.labels = card.labels.filter(l => l !== label);
+            saveData();
+            renderBoard();
+        }
+
+        // Drag and Drop for Cards
+        function handleDragStart(event, cardId, columnId) {
+            draggedCard = cardId;
+            draggedCardColumn = columnId;
+            event.target.classList.add('dragging');
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('type', 'card');
+        }
+
+        function handleDragEnd(event) {
+            event.target.classList.remove('dragging');
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.classList.remove('active');
+            });
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('active');
+            event.currentTarget.classList.add('drop-zone');
+        }
+
+        function handleDragLeave(event) {
+            event.currentTarget.classList.remove('active');
+            event.currentTarget.classList.remove('drop-zone');
+        }
+
+        function handleDrop(event, targetColumnId) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('active');
+            event.currentTarget.classList.remove('drop-zone');
+
+            if (!draggedCard) return;
+
+            // Find and remove card from source
+            const sourceColumn = boardData.columns.find(c => c.id === draggedCardColumn);
+            const cardIndex = sourceColumn.cards.findIndex(c => c.id === draggedCard);
+            const [card] = sourceColumn.cards.splice(cardIndex, 1);
+
+            // Add to target
+            const targetColumn = boardData.columns.find(c => c.id === targetColumnId);
+            targetColumn.cards.push(card);
+
+            draggedCard = null;
+            draggedCardColumn = null;
+
+            saveData();
+            renderBoard();
+        }
+
+        // Clear board
+        function clearBoard() {
+            document.getElementById('clearConfirmModal').classList.add('active');
+        }
+
+        function hideClearConfirmModal() {
+            document.getElementById('clearConfirmModal').classList.remove('active');
+        }
+
+        function handleClearModalClick(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                hideClearConfirmModal();
+            }
+        }
+
+        function confirmClearBoard() {
+            boardData = { columns: [] };
+            saveData();
+            renderBoard();
+            hideClearConfirmModal();
+        }
+
+        // Export board to file
+        function exportBoard() {
+            const dataStr = JSON.stringify(boardData, null, 2);
+            const blob = new Blob([dataStr], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            const date = new Date().toISOString().slice(0, 10);
+            a.download = `kanban-board-${date}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Import board from file
+        function importBoard(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (!importedData.columns || !Array.isArray(importedData.columns)) {
+                        throw new Error('Invalid file format');
+                    }
+
+                    for (const col of importedData.columns) {
+                        if (!col.id || !col.title || !Array.isArray(col.cards)) {
+                            throw new Error('Invalid column structure');
+                        }
+                        for (const card of col.cards) {
+                            if (!card.id || !card.content) {
+                                throw new Error('Invalid card structure');
+                            }
+                            if (!card.labels) card.labels = [];
+                        }
+                    }
+
+                    if (confirm('This will replace your current board. Continue?')) {
+                        boardData = importedData;
+                        saveData();
+                        renderBoard();
+                    }
+                } catch (error) {
+                    alert('Error importing file: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // Start the app
+        init();
+    </script>
+</body>
+</html>
